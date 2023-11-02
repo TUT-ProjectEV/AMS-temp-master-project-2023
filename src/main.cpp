@@ -8,15 +8,16 @@
 
 const unsigned long CAL_INTERVAL = 5000;
 
-volatile uint8_t count;
-uint8_t data[8];
-Thermistor *thm;
-volatile uint8_t countFlag;
+volatile uint8_t count = 0;
+uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+Thermistor *thm = new Thermistor();
+volatile uint8_t countFlag = 0;
 volatile unsigned long nowTime, lastCalTime;
-volatile unsigned char pastErrFlag[3];
-volatile unsigned char dangerFlag;
-CAN_Temp *ACC_Temp;
-volatile unsigned char printTimer;
+volatile unsigned char pastErrFlag[3] = {0, 0, 0};
+volatile unsigned char dangerFlag = 0;
+CAN_Temp *ACC_Temp = new CAN_Temp(ACC_ID);
+volatile unsigned char printTimer = 0;
+volatile unsigned char serialFlag = 0;
 
 void handler(void);
 
@@ -26,22 +27,26 @@ void runCalibration(void);
 
 void setup()
 {
-    _init_(1000);
-
     pinMode(DANGER_OUTPUT, OUTPUT);
 
     Wire.begin();
 
     Serial.begin(115200);
 
+    Serial.println("Time,MAX,MIN,AVR");
+
     MsTimer2::set(100, handler);
     MsTimer2::start();
+
+    ACC_Temp->init();
 }
 
 void loop()
 {
     if (!countFlag)
     {
+        serialFlag = 0;
+
         if (count < ecuNum)
         {
             // データリクエスト
@@ -85,6 +90,7 @@ void loop()
         }
 
         countFlag = 1;
+        serialFlag = 1;
     }
 
     pastErrFlag[2] = pastErrFlag[1];
@@ -153,44 +159,39 @@ void handler(void)
     // Serial.println(count);
 
     printTimer++;
-    if (printTimer == 10)
+    if (printTimer >= 10)
     {
-        Serial.print(millis());
-        Serial.print(",");
-        Serial.print(ACC_Temp->getTemp(Type::MAX_TEMP));
-        Serial.print(",");
-        Serial.print(ACC_Temp->getTemp(Type::MIN_TEMP));
-        Serial.print(",");
-        Serial.print(ACC_Temp->getTemp(Type::AVR_TEMP));
-        Serial.println();
+        if (serialFlag)
+        {
+            Serial.print(millis());
+            Serial.print(",");
+            Serial.print(ACC_Temp->getTemp(Type::MAX_TEMP));
+            Serial.print(",");
+            Serial.print(ACC_Temp->getTemp(Type::MIN_TEMP));
+            Serial.print(",");
+            Serial.print(ACC_Temp->getTemp(Type::AVR_TEMP));
+            Serial.println();
+            Serial.print(thm->getVal(0, 0));
+            Serial.print(",");
+            Serial.print(thm->getVal(0, 1));
+            Serial.print(",");
+            Serial.print(thm->getVal(0, 2));
+            Serial.println();
+            Serial.print(thm->getTemp(0, 0));
+            Serial.print(",");
+            Serial.print(thm->getTemp(0, 1));
+            Serial.print(",");
+            Serial.print(thm->getTemp(0, 2));
+            Serial.println();
+
+            printTimer = 0;
+        }
     }
 }
 
 void _init_(unsigned long time)
 {
-    count = 0;
 
-    for (int i = 0; i < 8; i++)
-    {
-        data[i] = 0;
-    }
-
-    countFlag = 0;
-
-    for (int i = 0; i < 3; i++)
-    {
-        pastErrFlag[i] = 0;
-    }
-
-    dangerFlag = 0;
-
-    thm = new Thermistor();
-
-    ACC_Temp = new CAN_Temp(ACC_ID);
-    ACC_Temp->init();
-
-    printTimer = 0;
-    Serial.println("Time,MAX,MIN,AVR");
 }
 
 void runCalibration(void)
