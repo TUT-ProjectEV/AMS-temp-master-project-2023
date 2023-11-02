@@ -85,13 +85,15 @@ unsigned char CAN_Temp::sendTempMsg(unsigned char printFlag)
 
     if (printFlag)
     {
+        SERIAL_PORT_MONITOR.println("----------Massage----------");
+        checkBuf(buf);
+        SERIAL_PORT_MONITOR.println("---------------------------");
+        SERIAL_PORT_MONITOR.println();
+
         switch (result)
         {
         case CAN_OK:
             SERIAL_PORT_MONITOR.println("send message");
-            SERIAL_PORT_MONITOR.println("----------Massage----------");
-            checkBuf(buf);
-            SERIAL_PORT_MONITOR.println("---------------------------");
             SERIAL_PORT_MONITOR.println();
             break;
 
