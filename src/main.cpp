@@ -16,6 +16,7 @@ volatile unsigned long nowTime, lastCalTime;
 volatile unsigned char pastErrFlag[3];
 volatile unsigned char dangerFlag;
 CAN_Temp *ACC_Temp;
+volatile unsigned char printTimer;
 
 void handler(void);
 
@@ -150,6 +151,19 @@ void handler(void)
         countFlag = 0;
     }
     // Serial.println(count);
+
+    printTimer++;
+    if (printTimer == 10)
+    {
+        Serial.print(millis());
+        Serial.print(" : ");
+        Serial.print(ACC_Temp->getTemp(Type::MAX_TEMP));
+        Serial.print(", ");
+        Serial.print(ACC_Temp->getTemp(Type::MIN_TEMP));
+        Serial.print(", ");
+        Serial.print(ACC_Temp->getTemp(Type::AVR_TEMP));
+        Serial.println();
+    }
 }
 
 void _init_(unsigned long time)
@@ -174,6 +188,8 @@ void _init_(unsigned long time)
 
     ACC_Temp = new CAN_Temp(ACC_ID);
     ACC_Temp->init();
+
+    printTimer = 0;
 }
 
 void runCalibration(void)
