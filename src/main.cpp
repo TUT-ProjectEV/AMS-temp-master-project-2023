@@ -156,11 +156,11 @@ void handler(void)
     if (printTimer == 10)
     {
         Serial.print(millis());
-        Serial.print(" : ");
+        Serial.print(",");
         Serial.print(ACC_Temp->getTemp(Type::MAX_TEMP));
-        Serial.print(", ");
+        Serial.print(",");
         Serial.print(ACC_Temp->getTemp(Type::MIN_TEMP));
-        Serial.print(", ");
+        Serial.print(",");
         Serial.print(ACC_Temp->getTemp(Type::AVR_TEMP));
         Serial.println();
     }
@@ -190,6 +190,7 @@ void _init_(unsigned long time)
     ACC_Temp->init();
 
     printTimer = 0;
+    Serial.println("Time,MAX,MIN,AVR");
 }
 
 void runCalibration(void)
